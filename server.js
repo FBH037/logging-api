@@ -3,7 +3,7 @@ const express       = require('express');
 
 const app = express();
 const serverPort = config.server.port;
-
+const http = require('http');
 /*
   Implement Route Handlers for endpoints:
 
@@ -13,7 +13,19 @@ const serverPort = config.server.port;
   GET /logs - Return the logs from data store. Consider the ability to page results.
 
 */
-
 app.listen(serverPort, () => {
   console.log(`Log API running on ${serverPort}`);
+});
+
+
+app.get('/', function (req, res) {
+  res.send('Hello World!');
+});
+//
+app.post('/logs', function (req, res) {
+  res.send('POSTING');
+});
+
+app.get('/logs', function (req, res) {
+  res.send('GETTING');
 });
