@@ -1,11 +1,11 @@
 const config        = require('./config.json');
 const express       = require('express');
-const app = express();
-const serverPort = config.server.port;
-const http = require('http');
-const assert = require('assert');
-const cassandra = require('cassandra-driver');
-
+const app           = express();
+const serverPort    = config.server.port;
+const http          = require('http');
+const assert        = require('assert');
+const cassandra     = require('cassandra-driver');
+const bodyParser    = require('body-parser')
 
 /*
   Implement Route Handlers for endpoints:
@@ -17,11 +17,20 @@ const cassandra = require('cassandra-driver');
 
 */
 
+// Config
+  // parse application/x-www-form-urlencoded
+  app.use(bodyParser.urlencoded({ extended: false }))
+
+  // parse application/json
+  app.use(bodyParser.json())
+
   app.listen(serverPort, () => {
     console.log(`Log API running on ${serverPort}`);
   });
 
 
+
+// Routes
   app.get('/', function (req, res) {
     res.send('Hello World!');
   });
@@ -50,15 +59,6 @@ const cassandra = require('cassandra-driver');
     res.send('Created table');
   });
 
-  app.post('/create_event', function (req, res) {
-    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
-      client.execute("INSERT INTO logs (event) VALUES ('An Event!');", function(err, result) {
-        assert.ifError(err);
-        console.log("Error: ", err, "Result: ", result);
-      });
-    res.send('Created an event');
-  });
-
   app.post('/get_event', function (req, res) {
     client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
     client.execute('SELECT event FROM logs WHERE key=logging_db', ['An Event!'], function(err, result) {
@@ -69,22 +69,38 @@ const cassandra = require('cassandra-driver');
   });
 
 
+  app.post('/create_event', function (req, res) {
+    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
+      client.execute("INSERT INTO logs (event) VALUES ('An Event!');", function(err, result) {
+        assert.ifError(err);
+        console.log("Error: ", err, "Result: ", result);
+      });
+    res.send('Created an event');
+  });
+
+
 
 
   app.post('/logs', function (req, res) {
+    console.log("POST REQUEST", req.body)
 
 
-    //
-    client.execute('SELECT event FROM logs WHERE key=logging_db', ['An Event!'], function(err, result) {
+    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
+      client.execute("INSERT INTO logs (event) VALUES ('"+ JSON.stringify(req.body) +"');", function(err, result) {
+        assert.ifError(err);
+        console.log("Error: ", err, "Result: ", result);
+      });
+    res.send('POSTING TO LOGS');
+  });
+
+  app.get('/logs', function (req, res) {
+    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
+    client.execute('SELECT * FROM logs;', function(err, result) {
       assert.ifError(err);
       console.log(err, result);
     });
 
 
-    res.send("POSTING");
-  });
-
-  app.get('/logs', function (req, res) {
     res.send('GETTING');
   });
 // }, 30000);
