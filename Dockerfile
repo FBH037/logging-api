@@ -7,18 +7,12 @@ WORKDIR /usr/src/app
 
 COPY package.json /usr/src/app/
 
-RUN npm install
 
 COPY . /usr/src/app
 
+EXPOSE 3000
 
-# replace this with your application's default port
-EXPOSE 3030
-
+# CMD ["nodemon", "--legacy-watch", "/usr/src/app/server.js" ]
 CMD [ "npm", "start" ]
 
 # RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-#
-# RUN  apt-get -y update && apt-get install -y fortunes
-#
-# CMD /usr/games/fortune -a | cowsay

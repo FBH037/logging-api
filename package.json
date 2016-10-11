@@ -10,6 +10,11 @@
   "author": "Jonathan Griggs <jonathan.griggs@ombud.com>",
   "license": "MIT",
   "dependencies": {
-    "express": "4.14.0"
+    "assert": "^1.4.1",
+    "async": "^2.0.1",
+    "cassandra-driver": "^3.1.5",
+    "express": "4.14.0",
+    "express-cassandra": "^1.4.2",
+    "helenus": "^0.6.10"
   }
 }
