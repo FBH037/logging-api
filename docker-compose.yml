@@ -14,9 +14,19 @@ services:
     ports:
       - "9042:9042"
       - "9160:9160"
+    # command: cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logging_db WITH replication = {'class'{{":"}} 'SimpleStrategy', 'replication_factor'{{":"}} '3' };"
       # CASSANDRA_LISTEN_ADDRESS:
     # volumes: # uncomment if you desire mounts, also uncomment cluster.sh
     #   - ./data/cassandra-1:/var/lib/cassandra:rw
+
+  setupcassandra:
+    build: cassandra-docker
+    depends_on:
+      - cassandra
+    links:
+      - cassandra:cassandra
+    command: bash -c "sleep 45 && echo Creating keyspace and tables && cqlsh cassandra -f init.cql && sleep infinity"
+
 
   web:
 
@@ -25,7 +35,7 @@ services:
     links:
       - cassandra:cassandra
 
-    build: .
+    build: express-docker
 
     # Unkown if this will effect hot loading
     # volumes:

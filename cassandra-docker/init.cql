@@ -1,0 +1,2 @@
+CREATE KEYSPACE IF NOT EXISTS logging_db WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '3' };
+CREATE TABLE IF NOT EXISTS logging_db.logs (event text, created_at timestamp, PRIMARY KEY (created_at));

@@ -28,35 +28,9 @@ const bodyParser    = require('body-parser')
     console.log(`Log API running on ${serverPort}`);
   });
 
-
-
 // Routes
   app.get('/', function (req, res) {
     res.send('Hello World!');
-  });
-
-
-  app.post('/create_db', function (req, res) {
-    var client = new cassandra.Client({contactPoints: ['cassandra']});
-
-    client.connect(function(e) {
-
-      return client.execute("CREATE KEYSPACE logging_db WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '3' };", function(e, res) {
-        console.log("Error: ", err, "Result: ", result);
-      });
-    });
-
-    res.send('Created db');
-  });
-
-  app.post('/create_table', function (req, res) {
-    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
-
-    client.execute("CREATE TABLE IF NOT EXISTS logging_db.logs (event text, PRIMARY KEY (event));", function(err, result) {
-      assert.ifError(err);
-      console.log("Error: ", err, "Result: ", result);
-    });
-    res.send('Created table');
   });
 
   app.post('/get_event', function (req, res) {
@@ -84,12 +58,12 @@ const bodyParser    = require('body-parser')
   app.post('/logs', function (req, res) {
     console.log("POST REQUEST", req.body)
 
-
     client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
-      client.execute("INSERT INTO logs (event) VALUES ('"+ JSON.stringify(req.body) +"');", function(err, result) {
+      client.execute("INSERT INTO logs (event, created_at) VALUES (?, toTimestamp(now()));",[JSON.stringify(req.body)] , function(err, result) {
         assert.ifError(err);
         console.log("Error: ", err, "Result: ", result);
       });
+
     res.send('POSTING TO LOGS');
   });
 
@@ -97,11 +71,12 @@ const bodyParser    = require('body-parser')
     client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
     client.execute('SELECT * FROM logs;', function(err, result) {
       assert.ifError(err);
+      res.send(result);
       console.log(err, result);
     });
 
 
-    res.send('GETTING');
+
   });
 // }, 30000);
 

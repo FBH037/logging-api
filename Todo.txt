@@ -1,4 +1,5 @@
-- script building of database
-- put timestamp on row
+- script building of database: DONE
+- put timestamp on row: DONE
 - Figure out why cassandra refuses to duplicate data and a way around it (possibly solved with the timestamp since it will make each row uniq?)
 - dont convert from json -> javascript object -> json string... just insert JSON (cassandra supports it)
+- write simple script to ping cassandra container to see if its ready for connections rather than just waiting a certain amount of time
