@@ -23,7 +23,6 @@ services:
       - cassandra:cassandra
     command: bash -c "sleep 45 && echo Creating keyspace and tables && cqlsh cassandra -f init.cql && sleep infinity"
 
-
   web:
 
     depends_on:

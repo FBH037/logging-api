@@ -17,6 +17,7 @@ const bodyParser    = require('body-parser')
 
 */
 
+//config
   var databaseClient = null
 
   function client() {
@@ -26,10 +27,6 @@ const bodyParser    = require('body-parser')
     return databaseClient
   }
 
-
-  // // parse application/x-www-form-urlencoded
-  // app.use(bodyParser.urlencoded({ extended: false }));
-  //
   // parse application/json
   app.use(bodyParser.text({ type: '*/*' }));
 
@@ -43,7 +40,6 @@ const bodyParser    = require('body-parser')
 // Routes
   app.post('/logs', function (req, res) {
     console.log("Post Request", JSON.stringify(req.headers))
-    // var client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
       client().execute("INSERT INTO logs (body, headers, created_at) VALUES (?, ?, toTimestamp(now()));", [req.body, JSON.stringify(req.headers)], function(err, result) {
         if (err){
           res.status(400).send({ "error" : err });
@@ -61,7 +57,6 @@ const bodyParser    = require('body-parser')
     var records = parseInt(req.query.records) || 1000;
     var lineBegin = records * page;
     var lineEnd = lineBegin + records;
-    // var client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
 
     client().execute("SELECT * FROM logs WHERE created_at >= '" + timeFrom + "' AND  created_at <= '" + timeTo + "' ALLOW FILTERING;", function(err, result) {
       if (err){
@@ -79,7 +74,6 @@ const bodyParser    = require('body-parser')
   });
 
   app.post('/clear_logs', function (req, res) {
-    // var client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
       client().execute("TRUNCATE logs;", function(err, result) {
         if (err){
           res.status(400).send({ "error" : err });
