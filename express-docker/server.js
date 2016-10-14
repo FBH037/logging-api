@@ -17,118 +17,75 @@ const bodyParser    = require('body-parser')
 
 */
 
-// Config
-  // parse application/x-www-form-urlencoded
-  app.use(bodyParser.urlencoded({ extended: false }))
+  var databaseClient = null
 
+  function client() {
+    if ( !databaseClient ){
+      databaseClient = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
+    }
+    return databaseClient
+  }
+
+
+  // // parse application/x-www-form-urlencoded
+  // app.use(bodyParser.urlencoded({ extended: false }));
+  //
   // parse application/json
-  app.use(bodyParser.json())
+  app.use(bodyParser.text({ type: '*/*' }));
+
 
   app.listen(serverPort, () => {
     console.log(`Log API running on ${serverPort}`);
   });
 
+
+
 // Routes
-  app.get('/', function (req, res) {
-    res.send('Hello World!');
-  });
-
-  app.post('/get_event', function (req, res) {
-    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
-    client.execute('SELECT event FROM logs WHERE key=logging_db', ['An Event!'], function(err, result) {
-      assert.ifError(err);
-      console.log("Error: ", err, "Result: ", result);
-    });
-    res.send('Created an event');
-  });
-
-
-  app.post('/create_event', function (req, res) {
-    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
-      client.execute("INSERT INTO logs (event) VALUES ('An Event!');", function(err, result) {
-        assert.ifError(err);
-        console.log("Error: ", err, "Result: ", result);
-      });
-    res.send('Created an event');
-  });
-
-
-
-
   app.post('/logs', function (req, res) {
-    console.log("POST REQUEST", req.body)
-
-    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
-      client.execute("INSERT INTO logs (event, created_at) VALUES (?, toTimestamp(now()));",[JSON.stringify(req.body)] , function(err, result) {
-        assert.ifError(err);
-        console.log("Error: ", err, "Result: ", result);
+    console.log("Post Request", JSON.stringify(req.headers))
+    // var client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
+      client().execute("INSERT INTO logs (body, headers, created_at) VALUES (?, ?, toTimestamp(now()));", [req.body, JSON.stringify(req.headers)], function(err, result) {
+        if (err){
+          res.status(400).send({ "error" : err });
+        }
+        var response = JSON.stringify(result);
+        res.send(response);
       });
 
-    res.send('POSTING TO LOGS');
   });
 
   app.get('/logs', function (req, res) {
-    client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
-    client.execute('SELECT * FROM logs;', function(err, result) {
-      assert.ifError(err);
-      res.send(result);
-      console.log(err, result);
+    var timeFrom = req.query.from || '2013-08-13 23:59:00+0200';
+    var timeTo = req.query.to || '3000-08-13 23:59:00+0200';
+    var page = parseInt(req.query.page) || 0;
+    var records = parseInt(req.query.records) || 1000;
+    var lineBegin = records * page;
+    var lineEnd = lineBegin + records;
+    // var client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
+
+    client().execute("SELECT * FROM logs WHERE created_at >= '" + timeFrom + "' AND  created_at <= '" + timeTo + "' ALLOW FILTERING;", function(err, result) {
+      if (err){
+        res.status(400).send({ "error" : err });
+      }
+
+      var totalRecords = result.rows.length
+      var data = result.rows.slice(lineBegin, lineEnd)
+
+      var response = JSON.stringify({"data" : data, "totalRecords" : result.rows.length, "page" : page, "recordsPerPage" : records, })
+
+      res.send(response);
     });
 
-
-
   });
-// }, 30000);
+
+  app.post('/clear_logs', function (req, res) {
+    // var client = new cassandra.Client({contactPoints: ['cassandra'], keyspace: "logging_db"});
+      client().execute("TRUNCATE logs;", function(err, result) {
+        if (err){
+          res.status(400).send({ "error" : err });
+        }
+      });
+      res.send({ "data" : "Logs cleared" });
+  });
 
 
-
-
-
-
-
-
-
-
-
-//   var helenus = require('helenus'),
-//
-//     pool = new helenus.ConnectionPool({
-//       hosts      : ['localhost:9160'],
-//       keyspace   : 'helenus_test',
-//       user       : 'test',
-//       password   : 'test1233',
-//       timeout    : 30000
-//       //cqlVersion : '3.0.0' // specify this if you're using Cassandra 1.1 and want to use CQL 3
-//     });
-//
-// //optionally you can supply the 'getHost' parameter to the connection pool options which will
-// // allow you to override the default random host decision
-//
-// //if you don't listen for error, it will bubble up to `process.uncaughtException`
-// //pools act just like connection objects, so you don't have to worry about api
-// //differences when using either the pool or the connection
-// pool.on('error', function(err){
-//   console.error(err.name, err.message);
-// });
-//
-// //makes a connection to the pool, this will return once there is at least one
-// //valid connection, other connections may still be pending
-// pool.connect(function(err, keyspace){
-//   if(err){
-//     throw(err);
-//   } else {
-//     //to use cql, access the pool object once connected
-//     //the first argument is the CQL string, the second is an `Array` of items
-//     //to interpolate into the format string, the last is the callback
-//     //for formatting specific see `http://nodejs.org/docs/latest/api/util.html#util.format`
-//     //results is an array of row objects
-//
-//     pool.cql("SELECT col FROM cf_one WHERE key = ?", ['key123'], function(err, results){
-//       console.log(err, results);
-//     });
-//
-//     //NOTE:
-//     //- You can always skip quotes around placeholders, they are added automatically.
-//     //- In CQL 3 you cannot use placeholders for ColumnFamily names or Column names.
-//   }
-// });
