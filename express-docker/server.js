@@ -39,8 +39,8 @@ const bodyParser    = require('body-parser')
 
 // Routes
   app.post('/logs', function (req, res) {
-    console.log("Post Request", JSON.stringify(req.headers))
-      client().execute("INSERT INTO logs (body, headers, created_at) VALUES (?, ?, toTimestamp(now()));", [req.body, JSON.stringify(req.headers)], function(err, result) {
+    console.log("Post Request", req.connection.remoteAddress)
+      client().execute("INSERT INTO logs (body, headers, remoteAddress, created_at) VALUES (?, ?, ?, toTimestamp(now()));", [req.body, JSON.stringify(req.headers), req.connection.remoteAddress], function(err, result) {
         if (err){
           res.status(400).send({ "error" : err });
         }
