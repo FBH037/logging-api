@@ -1,8 +1,2 @@
-- script building of database: DONE
-- put timestamp on row: DONE
-- Figure out why cassandra refuses to duplicate data and a way around it (possibly solved with the timestamp since it will make each row uniq?): DONE
-- Point to port 80 not 3000: DONE
-- dont convert from json -> javascript object -> json string... just insert JSON (cassandra supports it): DONE
-- paging: DONE
 - write simple script to ping cassandra container to see if its ready for connections rather than just waiting a certain amount of time
 - hot reloading: partially done but not automatic

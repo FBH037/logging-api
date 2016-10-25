@@ -7,15 +7,6 @@ const assert        = require('assert');
 const cassandra     = require('cassandra-driver');
 const bodyParser    = require('body-parser')
 
-/*
-  Implement Route Handlers for endpoints:
-
-  POST /logs - Post arbitrary JSON and persist to the data store, recording at minimum, a timestamp
-               and any other data you may think relevant to logging - IP, Browser, whatever
-
-  GET /logs - Return the logs from data store. Consider the ability to page results.
-
-*/
 
 //config
   var databaseClient = null
